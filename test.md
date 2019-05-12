@@ -1,4 +1,4 @@
-<h1> The Title is here <h1>
+<h1> The Title is here </h1>
 
 This is a test of making a **markdown** file in *github*.
 
