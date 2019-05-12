@@ -1,0 +1,201 @@
+Notes for Coding Assignment 2:
+
+---OK, so need to make a note that I changed one of the languages to Qiskit.
+
+-I was thinking about doing an 8x8 implementation instead, but I realized that if i do it with the ancilla qubits, it's not really the same algorithm. I mean the algorithm is supposed to use 2n + 1 qubits, but this one uses 2n + ancilla + 1 qubits. Also, I don't think doing that would really increase the number of things I could talk about regarding the coding or anything, since it would still be using the same gates and stuff. So fuck it, I'm doing a 2x2 implementation. Plus, the algorithm does also include the probability stuff, so there is more to it than just storing the image. I also kinda feel like I'd be betraying Aman if I did a different one. I think as long as I can draw enough comparisons between Qiskit and Cirq, it will be ok. 
+-Things to compare:
+	-Documentation
+	-Speed
+	-Ease of use
+	-Any special features for either one
+
+-Qiskit requires a "classical register"
+	-Nevermind, there totally is one. When you call Simulator.run(circuit, repetitions=10000)
+-In Cirq I was making new names for the gates, but in qiskit, that wasn't really necessary. The fact that Qiskit does not have specific rotation gates, but cirq does. Pretty surprising. See if this can be done in qiskit, actually.
+-I guess ultimately I can say which one I thought was better.
+-The fact that I was able to name the qubits maybe made it easier to reference them.
+-Cirq documentation: https://cirq.readthedocs.io/en/latest/_modules/cirq/google/xmon_gates.html 
+	-"does not exist yet"
+-Printed the circuit and it looks right. I guess you can actually do this in both.
+-Which one seems more accurate?
+
+-Also don't forget to comment the code.
+-Whoa, what if I used a T-test to compare the speed and accuracies.
+
+for i in range(100000000, 1000000001, 100000000):
+
+=======================================
+
+-The algorithm
+
+	-The algorithm I have implemented is for transforming qubits from the 0 state to the FRQI state, which stores an RGB image. Once the image has been stored the state is measure some large number of times to attempt to recover the RGB values in the image. There are three main phases for the algorithm. The first phase involves converting an array of RGB triplets, which represent an image, into angles in [0, pi/2]. Each of these angles is then sent to a function which uses two operations to store these angles in a quantum state, keeping track of which angle represents a color in which pixel of the image. The algorithm starts with 2n + 1 qubits in the |0> state. The first operation applies hadamard gates to 2n of the qubits, leaving one of them in the |0> state. The second operation is a succession of rotations about the y axis by 2 theta, controlled by 2n qubits. The C^2n operations are broken down into CNOT and cotrolled y-rotation gates, to accomplish rotating by 2theta only the basis vector corresponding to the pixel whose color is being encoded in the state. Once all the colors have been encoded in this fashion, the state is final. The third phase of the algorithm is recovery of the image. This is accomplished by first measure the state some number of times, which is determined by the user with more measurements leading to more accurate recovery of the image. Following these measurements, the probability of measure the |0> state for each pixel is estimated and in this way the value of theta corresponding to each pixel is recovered. Then the angles can be converted back into an array of RGB triplets, and the the full image is recovered. 
+
+	The quantum languages used to code this algorithm were Qiskit and Google Cirq. There were similarities in implementing with these two languages in certain respects and some noticable differences as well. 
+
+-Language Comparison
+
+	-Documentation
+
+		-Qiskits documentation seemed pretty good, especially the beginner stuff. There was also much more discussion about how to do things by others, which was very helpful.
+		-The tutorials were nice for beginner users. 
+
+		-Cirq has a fairly large documentation pdf which was helpful for certain things, but not so much for other things. There was not as much discussion about how to do things in the language as for Qiskit. It took a long time for me to find out how to conrtol a gate with Cirq. It was especially difficult to find out how to make use of a controlled rotation gate, which is the main reason we did not use Cirq to code the algorithm for the project. Eventually I did find a site where people were discussing how to do it, which was helpful. 
+		-There was a time when I doc which was supposed to discuss the use of xmon gates, which I thought would be very useful, but when I clicked the link it just had a text art image of someone walking down a hallway, and it said "Sorry, does not exist yet", which I found fitting for Cirq. 
+		-I also had a tough time finding out how to make multiple measurements on a circuit with Cirq. Instead I started by literally creating a for loop to run the entire circuit a number of times in  order to get the number of measurements I needed. As you may imagine this took a very long time. Eventually I did find out how to do it by specifying the number of "repetitions" in the running of a circuit. (( this is kinda my fault, though. I mean it does say that in the Documentation. Although it doesn't in the tutorial I think. Nevermind yeah it does. Just take this out. ))
+		-Cirq does have a tutorial, but it is much more technical than I feel a beginning tutorial should be. It describes "variational quantum algorithms", "wave functions", and preparing an "ansatz state". I found this confusing and in strict contrast to the tutorial for qiskit which included a "Hello World" section for quantum programming.  
+
+		-Cirq documentation doesn't have as many examples.
+
+		=====================================
+
+		When learning to use a new language it is very important to have good documentation and be able to look at examples of using the language. I found Qiskits documentation very helpful, and there was a lot of discussion online about how to use different aspects of Qiskit. The documentation for Cirq was helpful for a few things, but was lacking in many others. For example, there was a section in the documentation about gates, but there was no gate given for a controlled rotation gates. After searching for a while, I did find a place where users were discussing controlled gates and I found out that there was function which would control any gate, which is what I used. Tutorials are also very useful when using a new language. While Cirq does have a tutorial, I found it much more technical than a beginning tutorial should be. It describes "variational quantum algorithms", "wave functions", and preparing an "ansatz state". I found this confusing and in strict contrast to the tutorial for qiskit which included a "Hello World" section for quantum programming.  
+
+	-Ease of use
+
+		-In implementing the algorithm there were three main aspects where Qiskit and Cirq differed: the instantiation of the qubits, the creation of the circuit and the format of the results of running the circuit. In Qiskit the qubits are created as a group in a quantum register, with each one being referred to by an index in the register. This was fairly straight forward, but when printing the results of a measurement the indices for the qubits were the reverse of what I was expecting. The index 0 referred to the rightmost qubit, which I suppose makes sense in a binary counter sense of the qubits. When I first started using Cirq I used the "GridQubit" style of creating a lattice of qubits and referring to them by the location in the lattice. I then found out that you can use them individually and give each qubit its own name. I liked this because I could easily keep track of which qubit I was manipulating and measuring at different times in the algorithm. I realize there are advantages to using GridQubit, but since I am new to quantum programming I felt it was most important that the code was clear and readable. 
+
+		In creating the quantum circuit the main difference I found between Qiskit and Cirq was use of controlled gates. For qiskit there is not a controlled y rotation gate, but there is a general controlled rotation gate. Using this gate and setting the phi and lambda arguments to 0, turned this gate into a controlled y rotation gate. Once I figured this out, it went smoothly. To get the controlled y rotation using Cirq, I simply wrapped the Y rotation gate in "cirq.controlledGate()". This was very flexible and I could simply store this controlled gate in a variable and use it even more easily later on. To further simplify the process I created lists of controlled y rotations for each angle and the reverse rotation of this angle all at once before adding them to the circuit. This way I could just refer to the index in these lists corresponding to the pixel position, which I think makes the code more readable. This style of getting controlled gates is simple and intuitive, which could help on future programs as well. 
+
+		When running the circuit Qiskit and Cirq are very similar, in that you can simply run the circuit and pass the number of "shots" or "repetitions" to the simulator. Where they differ is in how they format the results of running the circuit. Quskit returns a very simple dictionary in which the keys are the basis vectors (stored as a string) and the values are the number of times the vector was the output. In order to use these results in the algorithm I cycled through every possible outcome and extracted the number of measurements from the dictionary. In Cirq the results of running the circuit are formed into a dictionary in which there is a key for each individual qubit. The values are a list, where each element is a list of one element which is either "False" if the measurement for the qubit was 0 or "True" if the measurement was 1. I'm not sure why the individual measurements are in a list when there is only one element, but once I figured that out it was not difficult to deal with. To use the results given in this fashion I cycled through the lists for each qubit together, one measurement at a time to put together what the total outcome of each measurement was. This was one point for Qiskit I think because it was much easier to interpret the results of a group of measurements simpy by printing the output. 
+
+
+		
+
+	-Speed and Accuracy
+		-The accuracies seem comparable
+		-As for speed, cirq seems slower than qiskit. This could be because of differences in my implementations but I do think its worth noting that qiskit did perform better every time.
+
+The speed and Accuracy testing for the actual quantum part (Cirq is still slower than Qiskit)
+
+qiskit
+cirq
+Avg time for cirq:  2.788823199272156
+Avg error for cirq:  0.0012096051214900503
+Avg time for qiskit:  0.5313672542572021
+Avg error for qiskit:  0.0013801986995863886
+Time stats:
+Ttest_indResult(statistic=4.57080726165037, pvalue=0.00023698886891334233)
+Error stats:
+Ttest_indResult(statistic=-0.6409023627369154, pvalue=0.5296621615654747)
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>the one above is when I started doing a better comparison
+'the' is not recognized as an internal or external command,
+operable program or batch file.
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>
+(py36) C:\Users\mhard\CMSC657\Project\Revised>
+(py36) C:\Users\mhard\CMSC657\Project\Revised>
+(py36) C:\Users\mhard\CMSC657\Project\Revised>the one above is when I started doing a better comparison
+'the' is not recognized as an internal or external command,
+operable program or batch file.
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python compare.py
+qiskit
+cirq
+Avg time for cirq:  2.7580758810043333
+Avg error for cirq:  0.0013158407868343008
+Avg time for qiskit:  1.336278462409973
+Avg error for qiskit:  0.0012654051705504304
+Time stats:
+Ttest_indResult(statistic=1.458062074018002, pvalue=0.16205125539602744)
+Error stats:
+Ttest_indResult(statistic=0.14956078652540647, pvalue=0.8827741696368566)
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python compare.py
+qiskit
+cirq
+Avg time for cirq:  2.4988972425460814
+Avg error for cirq:  0.0009641585374690467
+Avg time for qiskit:  1.5672604084014892
+Avg error for qiskit:  0.001481082855979526
+Time stats:
+Ttest_indResult(statistic=0.8206730296698455, pvalue=0.4225685199490363)
+Error stats:
+Ttest_indResult(statistic=-1.1475513864588163, pvalue=0.26617798962014894)
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python compare.py
+cirq
+qiskit
+Avg time for cirq:  2.4674896478652952
+Avg error for cirq:  0.001225896691997191
+Avg time for qiskit:  1.8195255756378175
+Avg error for qiskit:  0.0014718699853990534
+Time stats:
+Ttest_indResult(statistic=0.5279401974095984, pvalue=0.60398897442193)
+Error stats:
+Ttest_indResult(statistic=-0.6125271743053186, pvalue=0.5478500546101828)
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_qiskit.py
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+qiskit._schema_validation._SummaryValidationError: "Original message too long to be useful: {'qobj_id': '9f5f3ad2-eab6-46e4-8dcc-cd926d5df597', 'config': {'shots': [10, 0], 'memory_slots': 3, 'max_credits': 10, 'n_qubits': 3}, 'experiments': [{'instructions': [{'name': 'u1', 'params': [0.0], 'texparams': ['0'], 'qubits': [2]}, {'name': 'h', 'params': [], 'texparams': [], 'qubits': [1]}, {'name': 'x', 'params': [], 'texparams': [], 'qubits': [1]}, {'name': 'h', 'params': [], 'texparams': [], 'qubits': [0]}, {'name': 'x', 'params': [], 'texparams': [], 'qubits': [0]}, {'name': 'cx', 'params': [], 'texparams': [], 'qubits': [0, 2]}, {'name': 'u3', 'params': [-0.05234709438659751, 0.0, 0.0], 'texparams': ['-0.0523470943865975', '0', '0'], 'qubits': [2]}, {'name': 'cx', 'params': [], 'texparams': [], 'qubits': [0, 2]}, {'name': 'cx', 'params': [], 'texparams': [], 'qubits': [0, 1]}, {'name': 'u3', 'params': [0.05234709438659751, 0.0, 0.0], 'texparams': ['0.0523470943865975', '0', '0'], 'qubits': [2]}, {'name': 'u1', 'params': [0.0], 'texparams': ['0'], 'qubits': [2]}, {'name': 'cx[...]"
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "main_qiskit.py", line 52, in <module>
+    main()
+  File "main_qiskit.py", line 23, in main
+    new_angles = frqi_qiskit.run(angles, num_shots)
+  File "C:\Users\mhard\CMSC657\Project\Revised\frqi_qiskit.py", line 73, in run
+    job_sim = execute(qc, backend_sim, shots=num_shots)
+  File "C:\Users\mhard\Anaconda2\envs\py36\lib\site-packages\qiskit\wrapper\_wrapper.py", line 322, in execute
+    return backend.run(qobj)
+  File "C:\Users\mhard\Anaconda2\envs\py36\lib\site-packages\qiskit\backends\aer\qasm_simulator.py", line 81, in run
+    aer_job.submit()
+  File "C:\Users\mhard\Anaconda2\envs\py36\lib\site-packages\qiskit\backends\aer\aerjob.py", line 71, in submit
+    validate_qobj_against_schema(self._qobj)
+  File "C:\Users\mhard\Anaconda2\envs\py36\lib\site-packages\qiskit\qobj\_validation.py", line 22, in validate_qobj_against_schema
+    err_msg='Qobj failed validation. '
+  File "C:\Users\mhard\Anaconda2\envs\py36\lib\site-packages\qiskit\_schema_validation.py", line 148, in validate_json_against_schema
+    raise newerr
+qiskit._schema_validation.SchemaValidationError: 'Qobj failed validation. Set Qiskit log level to DEBUG for further information.'
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python compare.py
+cirq
+Traceback (most recent call last):
+  File "compare.py", line 35, in <module>
+    time, acc = cirq_compare.run(i)
+  File "C:\Users\mhard\CMSC657\Project\Revised\cirq_compare.py", line 28, in run
+    new_angles, totalTime = frqi_cirq.run(angles, num_shots)
+  File "C:\Users\mhard\CMSC657\Project\Revised\frqi_cirq.py", line 118, in run
+    return recovered_angles, totalTime
+NameError: name 'totalTime' is not defined
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_qiskit.py
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.13021643921252826, 1.4659460808532305, 0.17500429888094965, 0.11254649911795324]
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_qiskit.py 100000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.10288619003997611, 1.4835841186685508, 0.18690417961683248, 0.10830765026256593]
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_qiskit.py 1000000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.10444952960766295, 1.4791764089176778, 0.1902670019601433, 0.10993295676424605]
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_cirq.py 10000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+Traceback (most recent call last):
+  File "main_cirq.py", line 52, in <module>
+    main()
+  File "main_cirq.py", line 23, in main
+    new_angles = frqi_cirq.run(angles, num_shots)
+  File "C:\Users\mhard\CMSC657\Project\Revised\frqi_cirq.py", line 118, in run
+    return recovered_angles, totalTime
+NameError: name 'totalTime' is not defined
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_cirq.py 10000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.09472454822106749, 1.4639277080673878, 0.1922057747052489, 0.10156854368412471]
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_cirq.py 100000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.10150579939000505, 1.4821660064953868, 0.18562386056685273, 0.10961302079062096]
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_cirq.py 1000000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.10447746019075692, 1.4796680572619905, 0.1925817312903354, 0.11015897383598258]
+
+(py36) C:\Users\mhard\CMSC657\Project\Revised>python main_cirq.py 10000000
+[0.10469418877319502, 1.4791409747187294, 0.19059711289479092, 0.11006312153079476]
+[0.10461359907312502, 1.4793341450124233, 0.19064313144996278, 0.10987572162224345]
